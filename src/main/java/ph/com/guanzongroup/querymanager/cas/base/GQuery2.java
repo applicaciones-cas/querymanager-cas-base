@@ -15,7 +15,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GDBFChain;
 import org.guanzon.appdriver.base.GProperty;
-import org.guanzon.appdriver.base.GRider;
+import org.guanzon.appdriver.base.GRiderCAS;
+import org.guanzon.appdriver.base.GuanzonException;
 import org.guanzon.appdriver.base.LogWrapper;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
@@ -28,7 +29,7 @@ import org.json.simple.JSONObject;
 public class GQuery2 {
     private final String pxeModuleName = "GQuery";
     private static LogWrapper logwrapr = new LogWrapper("querymgrfx.GQuery", "temp/GQuery.log");
-    private GRider poGRider;
+    private GRiderCAS poGRider;
     private String message;
     private ResultSet rsdata;
     private GDBFChain gchain;
@@ -104,7 +105,7 @@ public class GQuery2 {
     }
     
     //initializes the branch info and GConnection object
-    public void setGRiderX(GRider rider){
+    public void setGRiderX(GRiderCAS rider) throws SQLException{
         if(rider == null){
             branchcd = "";
             branchnm = "";
@@ -120,7 +121,7 @@ public class GQuery2 {
     }
     
     //Note: a change of branch/ip means set reconnect to true
-    public boolean searchBranch(String branch, boolean code){
+    public boolean searchBranch(String branch, boolean code) throws SQLException{
         boolean result=false;
         
         //initialize error message
@@ -169,7 +170,7 @@ public class GQuery2 {
         return result;
     }
 
-    public boolean searchDestination(String branch, boolean code){
+    public boolean searchDestination(String branch, boolean code) throws SQLException{
         boolean result=false;
 
         //initialize error message
@@ -238,7 +239,7 @@ public class GQuery2 {
           } //if(gchain.getMessage().length() > 0){
           
          //log to the query manager log 
-         if(!gchain.logQuery(lasMessage[ctr], branchcd, Encrypt(poGRider.getUserID(), "sysmgr"))){
+         if(!gchain.logQuery(lasMessage[ctr], branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
              message = gchain.getMessage()  + "\nUnable to log the following: " + auto_query; 
              return false;
          } //if(!gchain.logQuery(lasMessage[ctr], branchcd, Encrypt(poGRider.getUserID(), "sysadmin"))){        
@@ -391,7 +392,7 @@ public class GQuery2 {
         }
         
         //log to the query manager log 
-        if(!gchain.logQuery(query, branchcd, Encrypt(poGRider.getUserID(), "sysmgr"))){
+        if(!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
             message = gchain.getMessage();
             gchain.rollbackTrans();
             count = 0;
@@ -425,7 +426,7 @@ public class GQuery2 {
             }
             
             //Log statement to the xxxAuditTrail
-            if(!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), Encrypt(poGRider.getUserID(), "sysmgr"))){
+            if(!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
                 message = gchain.getMessage();
                 gchain.rollbackTrans();
                 count = 0;
@@ -467,7 +468,7 @@ public class GQuery2 {
         }
         
         gchain.beginTrans();
-        if(gchain.logQuery(query, branchcd, Encrypt(poGRider.getUserID(), "sysmgr"))){
+        if(gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
             gchain.commitTrans();
         }
         else{
@@ -600,7 +601,7 @@ public class GQuery2 {
                 
                //log to the query manager log 
                gchain.beginTrans();
-               if(!gchain.logQuery("*:" + query, branchcd, Encrypt(poGRider.getUserID(), "sysmgr"))){
+               if(!gchain.logQuery("*:" + query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
                    message = gchain.getMessage();
                    gchain.rollbackTrans();
                    count = 0;
@@ -662,7 +663,7 @@ public class GQuery2 {
         }
         
         //log to the query manager log 
-        if(!gchain.logQuery(query, branchcd, Encrypt(poGRider.getUserID(), "sysmgr"))){
+        if(!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
             message = gchain.getMessage();
             gchain.rollbackTrans();
             count = 0;
@@ -683,7 +684,7 @@ public class GQuery2 {
             }
             
             //Log statement to the xxxAuditTrail
-            if(!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), Encrypt(poGRider.getUserID(), "sysmgr"))){
+            if(!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))){
                 message = gchain.getMessage();
                 gchain.rollbackTrans();
                 count = 0;
@@ -702,14 +703,14 @@ public class GQuery2 {
     private String getRights(String userid){
         String rights="";
         String query = "SELECT sUserLvlx FROM xxxSysUserQFX" + 
-                      " WHERE sUserIDxx = " + SQLUtil.toSQL(Encrypt(userid, "sysadmin"));
+                      " WHERE sUserIDxx = " + SQLUtil.toSQL(poGRider.Encrypt(userid, "sysadmin"));
         
         logwrapr.info(query);
         ResultSet loRS = gchain.executeQuery(query);
         
         try {
             if(loRS.next()){
-                rights = Decrypt(loRS.getString("sUserLvlx"), "sysadmin");
+                rights = poGRider.Decrypt(loRS.getString("sUserLvlx"), "sysadmin");
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -770,67 +771,27 @@ public class GQuery2 {
         String qry = "INSERT INTO xxxDeletedRec" + 
                     " SET sTransNox = " + SQLUtil.toSQL(transno) + 
                        ", sStatemnt = " + SQLUtil.toSQL(sql) + 
-                       ", dModified = " + SQLUtil.toSQL(poGRider.getServerDate(gchain.getConnection()));
+                       ", dModified = " + SQLUtil.toSQL(poGRider.getServerDate());
         gchain.executeUpdate(qry);
         
         return true;
     }
     
-    public boolean adduser(String user, String right){
+    public boolean adduser(String user, String right) throws SQLException, GuanzonException{
         boolean result = false;
         
-        user = Encrypt(user, "sysadmin");
-        right = Encrypt(right, "sysadmin");
+        user = poGRider.Encrypt(user, "sysadmin");
+        right = poGRider.Encrypt(right, "sysadmin");
         
         String query = "INSERT INTO xxxSysUserQFX(sUserIDxx, sUserLvlx)" + 
                   " VALUES(" + SQLUtil.toSQL(user) + "," 
                              + SQLUtil.toSQL(right) + ")";
         System.out.println(query);
-        poGRider.executeQuery(query, "xxxSysUserQFX", "", "");
+        poGRider.executeQuery(query, "xxxSysUserQFX", "", "", "");
         
         return result;
     }
     
-   public String Encrypt(String value, String salt){
-      if(value == null || value.trim().length() == 0 || salt == null || salt.trim().length() == 0)
-         return null;
-    
-      try {
-         GCrypt loCrypt = new GCrypt(salt.getBytes("ISO-8859-1"));
-         byte[] ret = loCrypt.encrypt(value.getBytes("ISO-8859-1"));
-         
-        return Hex.encodeHexString(ret);
-      } catch (UnsupportedEncodingException e) {
-         e.printStackTrace();
-         return null;
-      }
-   }    
-   
-   public String Decrypt(String value, String salt) {
-      if(value == null || value.trim().length() == 0 || salt == null || salt.trim().length() == 0)
-               return null;
-
-      byte[] hex;
-      try {
-        try {
-           hex = Hex.decodeHex(value);
-        } catch (DecoderException e1) {
-           e1.printStackTrace(); 
-           return null;
-        }
-         //System.out.println(new String(hex, "ISO-8859-1"));
-         //System.out.println(value);
-         //remove this part if returning the new logic...
-         GCrypt loCrypt = new GCrypt(salt.getBytes("ISO-8859-1"));
-         byte ret[] = loCrypt.decrypt(hex);
-
-         return new String(ret, "ISO-8859-1");
-      } catch (UnsupportedEncodingException e) {
-         e.printStackTrace();
-         return null;
-      }
-   }   
-   
    private GProperty loadConfig(String sprop){
          return(new GProperty(sprop));
    }
