@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ph.com.guanzongroup</groupId>
+    <artifactId>querymanager-cas-base</artifactId>
+    <version>0.2-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>org.guanzon</groupId>
+            <artifactId>appdriver-agent</artifactId>
+            <version>0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+    <developers>
+        <developer>
+            <name>Rex S. Adversalo</name>
+            <email>rsadversalo@guanzongroup.com.ph</email>
+            <organization>Guanzon Group of Companies</organization>
+        </developer>
+           
+        <developer>
+            <name>Marlon A. Sayson</name>
+            <email>masayson@guanzongroup.com.ph</email>
+            <organization>Guanzon Group of Companies</organization>
+        </developer>
+        
+        <developer>    
+            <name>Michael T. Cuison</name>
+            <email>mtcuison@guanzongroup.com.ph</email>
+            <organization>Guanzon Group of Companies</organization>
+        </developer>
+    </developers>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <!-- Add any configuration options here -->
+                </configuration>
+            </plugin>
+            <!-- JaCoCo plugin -->
+            <plugin>
+              <groupId>org.jacoco</groupId>
+              <artifactId>jacoco-maven-plugin</artifactId>
+              <version>0.8.11</version>
+              <configuration>
+                <!-- Exclude JDK internal classes that cause IllegalClassFormatException -->
+                <excludes>
+                    <exclude>java/**</exclude>
+                    <exclude>javax/**</exclude>
+                    <exclude>sun/**</exclude>
+                    <exclude>jdk/**</exclude>
+                </excludes>
+              </configuration>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>prepare-agent</goal>
+                  </goals>
+                </execution>
+                <execution>
+                  <id>report</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>report</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
+            <!-- Surefire plugin -->
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <version>3.2.5</version>
+              <configuration>
+                <!-- Ensures compatibility with newer JDKs -->
+                <useSystemClassLoader>false</useSystemClassLoader>
+              </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Guanzon-Central-Repository Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/mtcuison/Guanzon-Central-Repository/</url>
+        </repository>
+    </distributionManagement>
+</project>
