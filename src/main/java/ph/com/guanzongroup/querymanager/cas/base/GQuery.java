@@ -1,16 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ph.com.guanzongroup.querymanager.cas.base;
 
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GDBFChain;
@@ -130,7 +122,7 @@ public class GQuery {
                       " FROM Branch a" + 
                             " LEFT JOIN Branch_Others b ON a.sBranchCD = b.sBranchCD" +
                       " WHERE a.cRecdStat = '1'";
-        //query = MiscUtil.addCondition(query, code ? "a.sBranchCD = " + SQLUtil.toSQL(branch) : "a.sBranchNm LIKE " + SQLUtil.toSQL(branch + "%"));
+        query = MiscUtil.addCondition(query, code ? "a.sBranchCD = " + SQLUtil.toSQL(branch) : "a.sBranchNm LIKE " + SQLUtil.toSQL(branch + "%"));
         
         ResultSet loRS = poGRider.executeQuery(query);
         
@@ -283,12 +275,12 @@ public class GQuery {
         }
         
         //establish the connection
-//        gchain = poGRider.getGDBFChain(branchip);
+        //gchain = poGRider.getGDBFChain(branchip);
         
         //validate branch 
-        String ip = validBranch(branchcd, gchain.getConnection());
+        String ip = validBranch(branchcd, poGRider.getGConnection().getConnection());
         if(ip.length() == 0){
-            gchain = null;
+            //gchain = null;
             return false;
         }
         

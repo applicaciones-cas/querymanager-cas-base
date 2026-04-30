@@ -4,14 +4,9 @@
  */
 package ph.com.guanzongroup.querymanager.cas.base;
 
-import com.sun.org.apache.bcel.internal.generic.FSUB;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GProperty;
 import org.guanzon.appdriver.base.GRiderCAS;
@@ -21,6 +16,8 @@ import org.guanzon.appdriver.base.LogWrapper;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.json.simple.JSONObject;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * BatchQuery poBatch = new BatchQuery();
@@ -166,7 +163,7 @@ public class BatchQuery {
                     String lsSQL = query.toUpperCase();
                     
                     // Ensure SQL statement begins with an allowed keyword
-                    List<String> pasAllowedSQL = List.of("INSERT ", "UPDATE ", "DELETE ", "REPLACE ");
+                    List<String> pasAllowedSQL = Arrays.asList("INSERT ", "UPDATE ", "DELETE ", "REPLACE ");
                     if (pasAllowedSQL.stream().noneMatch(lsSQL::startsWith)) {
                         // Reject unrecognized or unauthorized SQL statements
                         psMessagex = "Error: SQL statement is not recognized: " + query;
