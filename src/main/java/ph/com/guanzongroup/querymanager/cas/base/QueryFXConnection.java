@@ -22,7 +22,6 @@
  *     loGCon.rollbackTrans();
  * =========================================
  */
-
 package ph.com.guanzongroup.querymanager.cas.base;
 
 import java.security.SecureRandom;
@@ -43,11 +42,12 @@ import org.guanzon.appdriver.base.SQLUtil;
 import org.json.simple.JSONObject;
 
 /**
- * 
+ *
  * @author kalyptus
  */
-public class QueryFXConnection{
-    public void setupDataSource(String fsURL, String fsDBF, String fsUser, String fsPassWD, String fsPort ) {
+public class QueryFXConnection {
+
+    public void setupDataSource(String fsURL, String fsDBF, String fsUser, String fsPassWD, String fsPort) {
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         ds.setUsername(fsUser);
@@ -56,36 +56,38 @@ public class QueryFXConnection{
         poDS = ds;
     }
 
-   /*
+    /*
     * Connect to the database using the values in the Data Source
-    */
-    public Connection doConnect() throws SQLException{
-        if(poDS == null)
+     */
+    public Connection doConnect() throws SQLException {
+        if (poDS == null) {
             return null;
+        }
 
-        if(poCon != null)
+        if (poCon != null) {
             poCon.close();
+        }
 
         poCon = poDS.getConnection();
 
         psBatchNox = "";
-        
+
         return poCon;
     }
 
-    public Connection getConnection(){
+    public Connection getConnection() {
         return poCon;
     }
-    
-    public void beginTrans(String fsEventDsc, String fsRemarksx, String fsSourceCD, String fsSourceNo) throws SQLException, GuanzonException{
-        if(!poCon.getAutoCommit()){
+
+    public void beginTrans(String fsEventDsc, String fsRemarksx, String fsSourceCD, String fsSourceNo) throws SQLException, GuanzonException {
+        if (!poCon.getAutoCommit()) {
             throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);
         }
-        
+
         poCon.setAutoCommit(false);
-        
+
         psBatchNox = generateBatchNo(psBranchCD, psTermNoxx);
-        
+
         StringBuilder lsNme = new StringBuilder();
 
         //set fieldnames
@@ -99,7 +101,7 @@ public class QueryFXConnection{
         lsNme.append(", dModified)");
 
         Timestamp tme = getServerDate();
-        
+
         StringBuilder lsSQL = new StringBuilder();
         lsSQL.append("(").append(SQLUtil.toSQL(psBatchNox));
         lsSQL.append(", ").append(SQLUtil.toSQL(MiscUtil.getPCName()));
@@ -108,7 +110,7 @@ public class QueryFXConnection{
         lsSQL.append(", ").append(SQLUtil.toSQL(fsEventDsc));
         lsSQL.append(", ").append(SQLUtil.toSQL(fsRemarksx));
         lsSQL.append(", ").append(SQLUtil.toSQL((psUserIDxx == null ? "" : psUserIDxx)));
-        lsSQL.append(", ").append(SQLUtil.toSQL(tme)).append(")");        
+        lsSQL.append(", ").append(SQLUtil.toSQL(tme)).append(")");
 
         //System.out.println(lsSQL.toString());
         executeUpdate("INSERT INTO xxxAuditLogMaster" + lsNme.toString() + " VALUES" + lsSQL.toString());
@@ -124,10 +126,10 @@ public class QueryFXConnection{
 
         // Regex patterns for each statement type
         String[] patterns = {
-            "^INSERT\\s+INTO\\s+(\\w+)",   // INSERT INTO table
-            "^UPDATE\\s+(\\w+)",           // UPDATE table
-            "^DELETE\\s+FROM\\s+(\\w+)",   // DELETE FROM table
-            "^REPLACE\\s+INTO\\s+(\\w+)"   // REPLACE INTO table
+            "^INSERT\\s+INTO\\s+(\\w+)", // INSERT INTO table
+            "^UPDATE\\s+(\\w+)", // UPDATE table
+            "^DELETE\\s+FROM\\s+(\\w+)", // DELETE FROM table
+            "^REPLACE\\s+INTO\\s+(\\w+)" // REPLACE INTO table
         };
 
         for (String regex : patterns) {
@@ -140,17 +142,17 @@ public class QueryFXConnection{
         return null; // no match found
     }
 
-    public ResultSet executeQuery(String sql) throws SQLException{
+    public ResultSet executeQuery(String sql) throws SQLException {
         Statement loSQL = poCon.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         ResultSet oRS = loSQL.executeQuery(sql);
         return oRS;
     }
-    
-    public long executeUpdate(String sql) throws SQLException, GuanzonException{
-        if(!poCon.getAutoCommit()){
+
+    public long executeUpdate(String sql) throws SQLException, GuanzonException {
+        if (!poCon.getAutoCommit()) {
             throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);
         }
-        
+
         long lnRecord;
         Statement loSQL = poCon.createStatement();
         sql = sql.replace(" 00:00:00", "");
@@ -160,14 +162,14 @@ public class QueryFXConnection{
         return lnRecord;
     }
 
-    public void logQuery(String sql, String branch, String destinat, String division) throws SQLException, GuanzonException{
-        if(!poCon.getAutoCommit()){
+    public void logQuery(String sql, String branch, String destinat, String division) throws SQLException, GuanzonException {
+        if (!poCon.getAutoCommit()) {
             throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);
         }
-        
+
         //extract the table here...
         String table = extractTableName(sql);
-        
+
         StringBuilder lsNme = new StringBuilder();
         String lsTransNox = getNextCode("xxxAuditLogDetail", "sTransNox", psBranchCD, psTermNoxx);
         //set fieldnames
@@ -216,14 +218,14 @@ public class QueryFXConnection{
 
         Timestamp tme = getServerDate();
         //dModified
-        lsSQL.append(", ").append(SQLUtil.toSQL(tme)).append(")");        
+        lsSQL.append(", ").append(SQLUtil.toSQL(tme)).append(")");
 
         executeUpdate("INSERT INTO xxxAuditLogDetail" + lsNme.toString() + " VALUES" + lsSQL.toString());
-        
+
     }
-    
-    public void commitTrans() throws SQLException, GuanzonException{
-        if(poCon.getAutoCommit()){
+
+    public void commitTrans() throws SQLException, GuanzonException {
+        if (poCon.getAutoCommit()) {
             throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);
         }
 
@@ -232,67 +234,65 @@ public class QueryFXConnection{
         psBatchNox = "";
     }
 
-    public void rollbackTrans() throws SQLException, GuanzonException{
-        if(poCon.getAutoCommit()){
+    public void rollbackTrans() throws SQLException, GuanzonException {
+        if (poCon.getAutoCommit()) {
             throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);
         }
-        
+
         poCon.rollback();
         poCon.setAutoCommit(false);
         psBatchNox = "";
     }
 
-   /*
+    /*
     * get the timestamp from the mysql server
-    */
-    public Timestamp getServerDate() throws SQLException{
-        if(poDS == null){
+     */
+    public Timestamp getServerDate() throws SQLException {
+        if (poDS == null) {
             return null;
         }
 
         Connection loCon;
-        if(poCon == null)
+        if (poCon == null) {
             loCon = doConnect();
-        else
+        } else {
             loCon = poCon;
+        }
 
         //System.out.println(loCon.getMetaData().getDriverName());
-
         String lsSQL;
-        
+
         //System.out.println(loCon.getMetaData().getDriverName());
-        
-        if(loCon.getMetaData().getDriverName().equalsIgnoreCase("SQLiteJDBC")){
+        if (loCon.getMetaData().getDriverName().equalsIgnoreCase("SQLiteJDBC")) {
             lsSQL = "SELECT DATETIME('now','localtime')";
-        }else if(loCon.getMetaData().getDriverName().equalsIgnoreCase("H2 JDBC Driver")){
+        } else if (loCon.getMetaData().getDriverName().equalsIgnoreCase("H2 JDBC Driver")) {
             lsSQL = "SELECT CURRENT_TIMESTAMP";
-        }else{
+        } else {
             //assume that default database is MySQL ODBC
             lsSQL = "SELECT SYSDATE()";
         }
 
         ResultSet loRS = loCon.createStatement()
-                    .executeQuery(lsSQL);
+                .executeQuery(lsSQL);
 
         //position record pointer to the first record
         loRS.next();
 
         Timestamp loTimeStamp;
-        
-        if(loCon.getMetaData().getDriverName().equalsIgnoreCase("H2 JDBC Driver")){
-            loTimeStamp = loRS.getTimestamp(1); 
+
+        if (loCon.getMetaData().getDriverName().equalsIgnoreCase("H2 JDBC Driver")) {
+            loTimeStamp = loRS.getTimestamp(1);
+        } else {
+            loTimeStamp = Timestamp.valueOf(loRS.getString(1));
         }
-        else{
-            loTimeStamp = Timestamp.valueOf(loRS.getString(1));  
-        }
-        
+
         //assigned timestamp
         //loTimeStamp = loRS.getTimestamp(1);
-
         //loTimeStamp = loRS.getTimestamp(1); 
-        
         MiscUtil.close(loRS);
-        if (poCon == null) MiscUtil.close(loCon);
+        if (poCon == null) {
+            MiscUtil.close(loCon);
+        }
 
         return loTimeStamp;
     }
@@ -310,7 +310,7 @@ public class QueryFXConnection{
         02 -> SS   -> 2 Digit seconds 
         03 -> XXXX -> 4 digit milliseconds
         04 -> NNNN -> 4 digit unique random number
-    */
+     */
     private String generateBatchNo(String branchCode, String terminalId) {
 
         // Timestamp formatted as yyMMddHHmmssSSS (2-digit year, total 15 digits for timestamp)
@@ -332,12 +332,12 @@ public class QueryFXConnection{
         04 -> YY   -> 4 Digit Year
         02 -> MM   -> 2 Digit Month
         08 -> NNNN -> 8 digit series
-    */
+     */
     private String getNextCode(
-        String fsTableNme,
-        String fsFieldNme,
-        String fsBranchCd, 
-        String fsTermIDxx) throws SQLException{
+            String fsTableNme,
+            String fsFieldNme,
+            String fsBranchCd,
+            String fsTermIDxx) throws SQLException {
 
         int lnNext;
         String lsSQL;
@@ -345,46 +345,46 @@ public class QueryFXConnection{
 
         // Timestamp formatted as yyMMddHHmmssSSS (6-digit year/month )
         String timestamp = new SimpleDateFormat("yyyyMM").format(new Date());
-        
+
         //BBBBTTYYYYMM
         String lsPref = fsBranchCd + fsTermIDxx + timestamp;
-        
+
         lsSQL = "SELECT " + fsFieldNme
-             + " FROM " + fsTableNme
-             + " WHERE " + fsFieldNme + " LIKE " + SQLUtil.toSQL(lsPref + "%") 
-             + " ORDER BY " + fsFieldNme + " DESC " 
-             + " LIMIT 1";
+                + " FROM " + fsTableNme
+                + " WHERE " + fsFieldNme + " LIKE " + SQLUtil.toSQL(lsPref + "%")
+                + " ORDER BY " + fsFieldNme + " DESC "
+                + " LIMIT 1";
 
         loRS = executeQuery(lsSQL);
-        if(loRS.next()){
-           lnNext = Integer.parseInt(loRS.getString(1).substring(lsPref.length()));
+        if (loRS.next()) {
+            lnNext = Integer.parseInt(loRS.getString(1).substring(lsPref.length()));
+        } else {
+            lnNext = 0;
         }
-        else
-           lnNext = 0;
 
-        String lsNextCde = lsPref + StringUtils.leftPad(String.valueOf(lnNext + 1), loRS.getMetaData().getPrecision(1) - lsPref.length() , "0");
+        String lsNextCde = lsPref + StringUtils.leftPad(String.valueOf(lnNext + 1), loRS.getMetaData().getPrecision(1) - lsPref.length(), "0");
 
         MiscUtil.close(loRS);
 
         return lsNextCde;
     }
-    
-    public void setBranch(String branch){
+
+    public void setBranch(String branch) {
         psBranchCD = branch;
     }
 
-    public void setTerminalNo(String terminalno){
+    public void setTerminalNo(String terminalno) {
         psTermNoxx = terminalno;
     }
-    
-    public void setUser(String user){
-       psUserIDxx = user;
+
+    public void setUser(String user) {
+        psUserIDxx = user;
     }
 
-    public String getBatchNumber(){
-       return psBatchNox;
+    public String getBatchNumber() {
+        return psBatchNox;
     }
-    
+
     private static final SecureRandom random = new SecureRandom();
     private BasicDataSource poDS;
     private Connection poCon;
@@ -394,5 +394,3 @@ public class QueryFXConnection{
 
     private String psBatchNox;
 }
-
-
