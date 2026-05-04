@@ -378,13 +378,13 @@ public class GQuery {
         }
 
         //log to the query manager log 
-//        if (!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//            message = gchain.getMessage();
-//            gchain.rollbackTrans();
-//            count = 0;
-//            rsdata = null;
-//            return false;
-//        }
+        if (!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+            message = gchain.getMessage();
+            gchain.rollbackTrans();
+            count = 0;
+            rsdata = null;
+            return false;
+        }
 
         //Do not allow other commands other than the following commands to circulate
         //from the different servers...
@@ -412,12 +412,12 @@ public class GQuery {
 //            }
 
             //Log statement to the xxxAuditTrail
-//            if (!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//                message = gchain.getMessage();
-//                gchain.rollbackTrans();
-//                count = 0;
-//                return false;
-//            }
+            if (!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+                message = gchain.getMessage();
+                gchain.rollbackTrans();
+                count = 0;
+                return false;
+            }
 
             gchain.commitTrans();
         }
@@ -453,15 +453,16 @@ public class GQuery {
             return false;
         }
 
-//        gchain.beginTrans();
-//        if (gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//            gchain.commitTrans();
-//        } else {
-//            message = gchain.getMessage();
-//            gchain.rollbackTrans();
-//            rsdata = null;
-//            return false;
-//        }
+        gchain.beginTrans();
+        if (gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+            gchain.commitTrans();
+        } else {
+            message = gchain.getMessage();
+            gchain.rollbackTrans();
+            rsdata = null;
+            return false;
+        }
+
         //kalyptus - 2018.08.28 04:59pm
         //evaluate if command has an AUTO-HELP FEATURE...
         //TODO: todo pa laeng...
@@ -587,14 +588,14 @@ public class GQuery {
                     || clone.startsWith("REPLACE INTO xxxQueryLog ")) {
 
                 //log to the query manager log 
-//                gchain.beginTrans();
-//                if (!gchain.logQuery("*:" + query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//                    message = gchain.getMessage();
-//                    gchain.rollbackTrans();
-//                    count = 0;
-//                    rsdata = null;
-//                    return false;
-//                }
+                gchain.beginTrans();
+                if (!gchain.logQuery("*:" + query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+                    message = gchain.getMessage();
+                    gchain.rollbackTrans();
+                    count = 0;
+                    rsdata = null;
+                    return false;
+                }
                 gchain.commitTrans();
 
                 //but do not execute...
@@ -646,13 +647,14 @@ public class GQuery {
         }
 
         //log to the query manager log 
-//        if (!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//            message = gchain.getMessage();
-//            gchain.rollbackTrans();
-//            count = 0;
-//            rsdata = null;
-//            return false;
-//        }
+        if (!gchain.logQuery(query, branchcd, poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+            message = gchain.getMessage();
+            gchain.rollbackTrans();
+            count = 0;
+            rsdata = null;
+            return false;
+        }
+        
         division = division.trim();
         int divx = NumberUtils.isNumber(division) ? Integer.valueOf(division) : 0;
 
@@ -665,14 +667,20 @@ public class GQuery {
 //                count = 0;
 //                return false;
 //            }
+            if (!gchain.logQuery(query, table, branchcd, destntcd, division)) {
+                message = gchain.getMessage();
+                gchain.rollbackTrans();
+                count = 0;
+                return false;
+            }
 
             //Log statement to the xxxAuditTrail
-//            if (!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
-//                message = gchain.getMessage();
-//                gchain.rollbackTrans();
-//                count = 0;
-//                return false;
-//            }
+            if (!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
+                message = gchain.getMessage();
+                gchain.rollbackTrans();
+                count = 0;
+                return false;
+            }
         }
 
         gchain.commitTrans();

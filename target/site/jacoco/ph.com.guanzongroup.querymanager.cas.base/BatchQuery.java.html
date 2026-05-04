@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BatchQuery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">querymanager-cas-base</a> &gt; <a href="index.source.html" class="el_package">ph.com.guanzongroup.querymanager.cas.base</a> &gt; <span class="el_source">BatchQuery.java</span></div><h1>BatchQuery.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package ph.com.guanzongroup.querymanager.cas.base;
+
+import com.sun.org.apache.bcel.internal.generic.FSUB;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.guanzon.appdriver.agent.ShowDialogFX;
+import org.guanzon.appdriver.base.GProperty;
+import org.guanzon.appdriver.base.GRiderCAS;
+
+import org.guanzon.appdriver.base.GuanzonException;
+import org.guanzon.appdriver.base.LogWrapper;
+import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.json.simple.JSONObject;
+
+/**
+ * BatchQuery poBatch = new BatchQuery(); poBatch.setGRider(poGRider);
+ * poBatch.setConfig(&quot;c:/ggc_java_systems/config/queryfx&quot;, &quot;GCASys_DBF&quot;);
+ * poBatch.searchBranch(&quot;M001&quot;, true); poBatch.searchModule(&quot;&quot;, false);
+ *
+ * @author kalyptus
+ */
+<span class="nc" id="L33">public class BatchQuery {</span>
+
+<span class="nc" id="L35">    private final String pxeModuleName = &quot;BatchQuery&quot;;</span>
+<span class="nc" id="L36">    private static LogWrapper logwrapr = new LogWrapper(&quot;querymgrfx.GQuery&quot;, &quot;temp/GQuery.log&quot;);</span>
+    private GRiderCAS poGRider;
+    private QueryFXConnection poConn;
+
+    private String psBranchCD;
+    private String psBranchNm;
+    private String psBranchIP;
+
+    private String psSourceCD;
+    private String psSourceNm;
+
+    private String psSourceNo;
+    private String psRemarksx;
+
+    private String psMessagex;
+
+    private List&lt;String&gt; pasDMLUQuery;
+
+    private String psDBHost;
+    private String psDBName;
+    private String psDBPort;
+    private String psDBUser;
+    private String psDBPass;
+    private String psDBSign;
+    private GProperty poProp;
+
+    public void setGRider(GRiderCAS rider) throws SQLException {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (rider == null) {</span>
+<span class="nc" id="L64">            psMessagex = &quot;Invalid Application Driver detected...&quot;;</span>
+<span class="nc" id="L65">            psBranchCD = &quot;&quot;;</span>
+<span class="nc" id="L66">            psBranchNm = &quot;&quot;;</span>
+        } else {
+<span class="nc" id="L68">            poGRider = rider;</span>
+<span class="nc" id="L69">            psBranchCD = poGRider.getBranchCode();</span>
+<span class="nc" id="L70">            psBranchNm = poGRider.getBranchName();</span>
+<span class="nc" id="L71">            psMessagex = &quot;&quot;;</span>
+        }
+
+<span class="nc" id="L74">        psSourceCD = &quot;&quot;;</span>
+<span class="nc" id="L75">        psSourceNm = &quot;&quot;;</span>
+<span class="nc" id="L76">        psSourceNo = &quot;&quot;;</span>
+
+<span class="nc" id="L78">        pasDMLUQuery = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L79">    }</span>
+
+    public String getBranchCode() {
+<span class="nc" id="L82">        return this.psBranchCD;</span>
+    }
+
+    public String getBranchName() {
+<span class="nc" id="L86">        return this.psBranchNm;</span>
+    }
+
+    public String getBranchIP() {
+<span class="nc" id="L90">        return this.psBranchIP;</span>
+    }
+
+    public String getSourceName() {
+<span class="nc" id="L94">        return this.psSourceNm;</span>
+    }
+
+    public String getSourceCode() {
+<span class="nc" id="L98">        return this.psSourceCD;</span>
+    }
+
+    public void setSourceNo(String fsSourceNo) {
+<span class="nc" id="L102">        this.psSourceNo = fsSourceNo;</span>
+<span class="nc" id="L103">    }</span>
+
+    public String getSourceNo() {
+<span class="nc" id="L106">        return this.psSourceNo;</span>
+    }
+
+    public void setRemarks(String fsRemarksx) {
+<span class="nc" id="L110">        this.psRemarksx = fsRemarksx;</span>
+<span class="nc" id="L111">    }</span>
+
+    public String getRemarks() {
+<span class="nc" id="L114">        return this.psRemarksx;</span>
+    }
+
+    public void beginTrans() throws SQLException, GuanzonException {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (poConn.getConnection().getAutoCommit()) {</span>
+<span class="nc" id="L119">            pasDMLUQuery = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L120">            poConn.beginTrans(&quot;UPDATE&quot;, psRemarksx, psSourceCD, psSourceNo);</span>
+        }
+<span class="nc" id="L122">    }</span>
+
+    public boolean executeDMLUpdate(String fsQuery) {
+        try {
+            // Ensure that a transaction has been properly initiated before proceeding
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (poConn.getConnection().getAutoCommit()) {</span>
+<span class="nc" id="L128">                psMessagex = &quot;Error: Transaction not started. Please call BeginTrans first.&quot;;</span>
+<span class="nc" id="L129">                rollbackTrans();</span>
+<span class="nc" id="L130">                return false;</span>
+            }
+
+            //Check if user is authorized to use this application
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (poGRider.getUserLevel() &lt; 16) {</span>
+<span class="nc" id="L135">                psMessagex = &quot;User is not authorized to use this application...&quot;;</span>
+<span class="nc" id="L136">                rollbackTrans();</span>
+<span class="nc" id="L137">                return false;</span>
+            }
+
+            // Validate if user role is authorized to use the application
+<span class="nc" id="L141">            String right = getRights(poGRider.getUserID()).toLowerCase();</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (right.equalsIgnoreCase(&quot;encoder&quot;)</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                    || right.equalsIgnoreCase(&quot;supervisor&quot;)</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                    || right.equalsIgnoreCase(&quot;sysadmin&quot;)</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                    || right.equalsIgnoreCase(&quot;engineer&quot;)) {</span>
+<span class="nc" id="L146">                psMessagex = &quot;Error: User is not authorized to use the application...&quot;;</span>
+<span class="nc" id="L147">                rollbackTrans();</span>
+<span class="nc" id="L148">                return false;</span>
+            }
+
+            //Split the query using semi-colon as parameter
+<span class="nc" id="L152">            String lasQuery[] = fsQuery.split(&quot;;&quot;);</span>
+
+            //process each part...
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            for (String query : lasQuery) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                if (!query.trim().isEmpty()) {</span>
+                    // Validate SQL statement length (must not exceed 4112 characters)
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                    if (query.length() &gt; 4112) {</span>
+<span class="nc" id="L159">                        psMessagex = &quot;Cannot execute SQL statements longer than 4112 characters:&quot; + query;</span>
+<span class="nc" id="L160">                        rollbackTrans();</span>
+<span class="nc" id="L161">                        return false;</span>
+                    }
+
+                    // Normalize formatting: convert to uppercase and collapse multiple spaces
+<span class="nc" id="L165">                    query = query.trim().replaceAll(&quot;\\s{2,}&quot;, &quot; &quot;);</span>
+<span class="nc" id="L166">                    String lsSQL = query.toUpperCase();</span>
+
+                    // Ensure SQL statement begins with an allowed keyword
+<span class="nc" id="L169">                    List&lt;String&gt; pasAllowedSQL = Arrays.asList(&quot;INSERT &quot;, &quot;UPDATE &quot;, &quot;DELETE &quot;, &quot;REPLACE &quot;);</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                    if (pasAllowedSQL.stream().noneMatch(lsSQL::startsWith)) {</span>
+                        // Reject unrecognized or unauthorized SQL statements
+<span class="nc" id="L173">                        psMessagex = &quot;Error: SQL statement is not recognized: &quot; + query;</span>
+<span class="nc" id="L174">                        rollbackTrans();</span>
+<span class="nc" id="L175">                        return false;</span>
+                    }
+
+                    // Restrict access for specific roles (encoder/supervisor)
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                    if (right.equalsIgnoreCase(&quot;encoder&quot;)</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                            || right.equalsIgnoreCase(&quot;supervisor&quot;)) {</span>
+                        // Prevent manipulation of sensitive tables
+<span class="nc bnc" id="L182" title="All 4 branches missed.">                        if (lsSQL.contains(&quot;xxxSysUserQFX&quot;) || lsSQL.contains(&quot;xxxQueryLog&quot;)) {</span>
+                            //Block execution
+<span class="nc" id="L184">                            psMessagex = &quot;Error: Unauthorized SQL statement detected:&quot; + query;</span>
+<span class="nc" id="L185">                            rollbackTrans();</span>
+<span class="nc" id="L186">                            return false;</span>
+                        } // end restricted table check
+                    } // end role validation
+
+                    //Add the DML statement for batch registration
+<span class="nc" id="L191">                    pasDMLUQuery.add(query);</span>
+
+                    //execute the query/statement
+<span class="nc" id="L194">                    long xcount = poConn.executeUpdate(query);</span>
+<span class="nc" id="L195">                    boolean result = false;</span>
+
+                    // Authorize execution based on number of records updated and user role
+<span class="nc bnc" id="L198" title="All 4 branches missed.">                    if (xcount &gt; 100 &amp;&amp; right.equalsIgnoreCase(&quot;engineer&quot;)) {</span>
+<span class="nc" id="L199">                        result = true;</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">                    } else if (xcount &gt; 50 &amp;&amp; right.equalsIgnoreCase(&quot;sysadmin&quot;)) {</span>
+<span class="nc" id="L201">                        result = true;</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">                    } else if (xcount &gt; 10 &amp;&amp; right.equalsIgnoreCase(&quot;supervisor&quot;)) {</span>
+<span class="nc" id="L203">                        result = true;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                    } else if (xcount &lt;= 10) {</span>
+<span class="nc" id="L205">                        result = true;</span>
+                    }
+
+                    //create message if user is not authorized before exiting the method...
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    if (!result) {</span>
+<span class="nc" id="L210">                        psMessagex = &quot;User is not authorized to execute a query that will update/delete &quot; + xcount + &quot; record(s)...&quot;;</span>
+<span class="nc" id="L211">                        rollbackTrans();</span>
+<span class="nc" id="L212">                        return false;</span>
+                    }
+                } // end non-empty query check
+            } // end query loop
+
+<span class="nc" id="L217">        } catch (SQLException | GuanzonException ex) {</span>
+<span class="nc" id="L218">            ex.printStackTrace();</span>
+<span class="nc" id="L219">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L220">            rollbackTrans();</span>
+<span class="nc" id="L221">            return false;</span>
+<span class="nc" id="L222">        }</span>
+
+<span class="nc" id="L224">        return true;</span>
+    }
+
+    public void rollbackTrans() {
+        try {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">            if (!poConn.getConnection().getAutoCommit()) {</span>
+<span class="nc" id="L230">                poConn.rollbackTrans();</span>
+<span class="nc" id="L231">                pasDMLUQuery = new ArrayList&lt;&gt;();</span>
+            }
+<span class="nc" id="L233">        } catch (SQLException | GuanzonException ex) {</span>
+<span class="nc" id="L234">            ex.printStackTrace();</span>
+<span class="nc" id="L235">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L236">        }</span>
+<span class="nc" id="L237">    }</span>
+
+    public void commitTrans() {
+        try {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (!poConn.getConnection().getAutoCommit()) {</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                for (String query : pasDMLUQuery) {</span>
+<span class="nc" id="L243">                    System.out.println(query);</span>
+<span class="nc" id="L244">                    poConn.logQuery(query, psBranchCD, &quot;&quot;, psDBSign);</span>
+<span class="nc" id="L245">                }</span>
+
+<span class="nc" id="L247">                poConn.commitTrans();</span>
+            }
+<span class="nc" id="L249">        } catch (SQLException | GuanzonException ex) {</span>
+<span class="nc" id="L250">            ex.printStackTrace();</span>
+<span class="nc" id="L251">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L252">        }</span>
+<span class="nc" id="L253">    }</span>
+
+    //setConfig(&quot;c:/ggc_java_systems/config/queryfx&quot;, &quot;GCASys_DBF&quot;);
+    public boolean setConfig(String config, String dbfname) {
+<span class="nc" id="L257">        this.psDBName = dbfname;</span>
+
+<span class="nc" id="L259">        this.poProp = loadConfig(config);</span>
+
+<span class="nc" id="L261">        this.psDBSign = poProp.getConfig(&quot;sys.default.signature&quot;);</span>
+<span class="nc" id="L262">        this.psDBHost = poProp.getConfig(&quot;sys.default.dbsrvr.&quot; + this.psDBName);</span>
+<span class="nc" id="L263">        this.psDBPort = poProp.getConfig(&quot;sys.default.dbport.&quot; + this.psDBName);</span>
+        //this.psDBUser = poProp.getConfig(&quot;sys.default.dbuser.&quot; + this.psDBName);    
+        //this.psDBPass = poProp.getConfig(&quot;sys.default.dbpass.&quot; + this.psDBName);
+<span class="nc" id="L266">        this.psDBUser = poGRider.Decrypt(poProp.getConfig(&quot;sys.default.dbuser.&quot; + this.psDBName), psDBSign);</span>
+<span class="nc" id="L267">        this.psDBPass = poGRider.Decrypt(poProp.getConfig(&quot;sys.default.dbpass.&quot; + this.psDBName), psDBSign);</span>
+
+<span class="nc" id="L269">        poConn = new QueryFXConnection();</span>
+<span class="nc" id="L270">        poConn.setupDataSource(psDBHost, psDBName, psDBUser, psDBPass, psDBPort);</span>
+
+<span class="nc" id="L272">        return true;</span>
+    }
+
+    public boolean searchBranch(String branch, boolean code) {
+<span class="nc" id="L276">        boolean result = false;</span>
+
+        //initialize error message
+<span class="nc" id="L279">        psMessagex = &quot;&quot;;</span>
+
+<span class="nc" id="L281">        String query = &quot;SELECT a.sBranchCD, a.sBranchNm, b.sDBIPAddr&quot;</span>
+                + &quot; FROM Branch a&quot;
+                + &quot; LEFT JOIN Branch_Others b ON a.sBranchCD = b.sBranchCD&quot;
+                + &quot; WHERE a.cRecdStat = '1'&quot;;
+        //query = MiscUtil.addCondition(query, code ? &quot;a.sBranchCD = &quot; + SQLUtil.toSQL(branch) : &quot;a.sBranchNm LIKE &quot; + SQLUtil.toSQL(branch + &quot;%&quot;));
+
+        try {
+<span class="nc" id="L288">            ResultSet loRS = poGRider.executeQuery(query);</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">            if (loRS.next()) {</span>
+<span class="nc bnc" id="L291" title="All 4 branches missed.">                if (code || MiscUtil.RecordCount(loRS) == 1) {</span>
+<span class="nc" id="L292">                    psBranchCD = loRS.getString(&quot;sBranchCD&quot;);</span>
+<span class="nc" id="L293">                    psBranchNm = loRS.getString(&quot;sBranchNm&quot;);</span>
+<span class="nc" id="L294">                    psBranchIP = loRS.getString(&quot;sDBIPAddr&quot;);</span>
+<span class="nc" id="L295">                    result = true;</span>
+                } else {
+                    //JSONObject loJSON = showFXDialog.jsonBrowse(poGRider, loRS, &quot;Code»Branch&quot;, &quot;sBranchCD»sBranchNm&quot;);
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                    JSONObject loJSON = ShowDialogFX.Browse(poGRider,</span>
+                            query,
+                            branch,
+                            &quot;Branch Code»Branch Name&quot;,
+                            &quot;sBranchCD»sBranchNm&quot;,
+                            &quot;a.sBranchCD»a.sBranchNm&quot;,
+                            code ? 0 : 1);
+
+<span class="nc bnc" id="L307" title="All 2 branches missed.">                    if (loJSON != null) {</span>
+<span class="nc" id="L308">                        psBranchCD = (String) loJSON.get(&quot;sBranchCD&quot;);</span>
+<span class="nc" id="L309">                        psBranchNm = (String) loJSON.get(&quot;sBranchNm&quot;);</span>
+<span class="nc" id="L310">                        psBranchIP = (String) loJSON.get(&quot;sDBIPAddr&quot;);</span>
+<span class="nc" id="L311">                        result = true;</span>
+                    } else {
+<span class="nc" id="L313">                        psMessagex = poGRider.getMessage();</span>
+                    }
+                }
+            }
+<span class="nc" id="L317">        } catch (SQLException ex) {</span>
+<span class="nc" id="L318">            ex.printStackTrace();</span>
+<span class="nc" id="L319">            psBranchCD = &quot;&quot;;</span>
+<span class="nc" id="L320">            psBranchNm = &quot;&quot;;</span>
+<span class="nc" id="L321">            psBranchIP = &quot;&quot;;</span>
+<span class="nc" id="L322">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L323">        }</span>
+
+<span class="nc" id="L325">        return result;</span>
+    }
+
+    public boolean searchModule(String module, boolean code) {
+<span class="nc" id="L329">        boolean result = false;</span>
+
+        //initialize error message
+<span class="nc" id="L332">        psMessagex = &quot;&quot;;</span>
+
+<span class="nc" id="L334">        String query = &quot;SELECT a.sSourceCD, a.sSourceNm&quot;</span>
+                + &quot; FROM xxxTransactionSource a&quot;
+                + &quot; WHERE a.cRecdStat = '1'&quot;;
+        //query = MiscUtil.addCondition(query, code ? &quot;a.sSourceCD = &quot; + SQLUtil.toSQL(module) : &quot;a.sSourceNm LIKE &quot; + SQLUtil.toSQL(module + &quot;%&quot;));
+
+        try {
+<span class="nc" id="L340">            ResultSet loRS = poGRider.executeQuery(query);</span>
+
+<span class="nc bnc" id="L342" title="All 2 branches missed.">            if (loRS.next()) {</span>
+<span class="nc bnc" id="L343" title="All 4 branches missed.">                if (code || MiscUtil.RecordCount(loRS) == 1) {</span>
+<span class="nc" id="L344">                    psSourceCD = loRS.getString(&quot;sSourceCD&quot;);</span>
+<span class="nc" id="L345">                    psSourceNm = loRS.getString(&quot;sSourceNm&quot;);</span>
+<span class="nc" id="L346">                    result = true;</span>
+                } else {
+                    //JSONObject loJSON = showFXDialog.jsonBrowse(poGRider, loRS, &quot;Code»Branch&quot;, &quot;sBranchCD»sBranchNm&quot;);
+
+<span class="nc bnc" id="L350" title="All 2 branches missed.">                    JSONObject loJSON = ShowDialogFX.Browse(poGRider,</span>
+                            query,
+                            module,
+                            &quot;Source Code»Source Name&quot;,
+                            &quot;sSourceCD»sSourceNm&quot;,
+                            &quot;a.sSourceCD»a.sSourceNm&quot;,
+                            code ? 0 : 1);
+
+<span class="nc bnc" id="L358" title="All 2 branches missed.">                    if (loJSON != null) {</span>
+<span class="nc" id="L359">                        psSourceCD = (String) loJSON.get(&quot;sSourceCD&quot;);</span>
+<span class="nc" id="L360">                        psSourceNm = (String) loJSON.get(&quot;sSourceNm&quot;);</span>
+<span class="nc" id="L361">                        result = true;</span>
+                    } else {
+<span class="nc" id="L363">                        psMessagex = poGRider.getMessage();</span>
+                    }
+                }
+            }
+<span class="nc" id="L367">        } catch (SQLException ex) {</span>
+<span class="nc" id="L368">            ex.printStackTrace();</span>
+<span class="nc" id="L369">            psSourceCD = &quot;&quot;;</span>
+<span class="nc" id="L370">            psSourceNm = &quot;&quot;;</span>
+<span class="nc" id="L371">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L372">        }</span>
+
+<span class="nc" id="L374">        return result;</span>
+    }
+
+    //query manager user rights are:
+    //encoder, supervisor, sysadmin, engineer
+    private String getRights(String userid) {
+<span class="nc" id="L380">        String rights = &quot;&quot;;</span>
+<span class="nc" id="L381">        String query = &quot;SELECT sUserLvlx FROM xxxSysUserQFX&quot;</span>
+<span class="nc" id="L382">                + &quot; WHERE sUserIDxx = &quot; + SQLUtil.toSQL(poGRider.Encrypt(userid, &quot;sysadmin&quot;));</span>
+
+<span class="nc" id="L384">        logwrapr.info(query);</span>
+
+        try {
+<span class="nc" id="L387">            ResultSet loRS = poGRider.executeQuery(query);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">            if (loRS.next()) {</span>
+<span class="nc" id="L389">                rights = poGRider.Decrypt(loRS.getString(&quot;sUserLvlx&quot;), &quot;sysadmin&quot;);</span>
+            }
+<span class="nc" id="L391">        } catch (SQLException ex) {</span>
+<span class="nc" id="L392">            ex.printStackTrace();</span>
+<span class="nc" id="L393">            psMessagex = ex.getMessage();</span>
+<span class="nc" id="L394">        }</span>
+
+<span class="nc" id="L396">        return rights;</span>
+    }
+
+    private GProperty loadConfig(String sprop) {
+<span class="nc" id="L400">        return (new GProperty(sprop));</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

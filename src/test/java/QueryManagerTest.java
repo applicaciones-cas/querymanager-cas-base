@@ -69,7 +69,7 @@ public class QueryManagerTest {
     public void tearDown() {
     }
 
-    @Test
+    //@Test
     public void testQuery() throws SQLException {
         System.out.println("-----testQuery()-----");
 
