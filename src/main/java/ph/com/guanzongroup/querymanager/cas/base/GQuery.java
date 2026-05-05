@@ -694,7 +694,7 @@ public class GQuery {
     private String getRights(String userid) {
         String rights = "";
         String query = "SELECT sUserLvlx FROM xxxSysUserQFX"
-                + " WHERE sUserIDxx = " + SQLUtil.toSQL(poGRider.Encrypt(userid, "sysadmin"));
+                        + " WHERE sUserIDxx = " + SQLUtil.toSQL(poGRider.Encrypt(userid, "sysadmin"));
 
         logwrapr.info(query);
         ResultSet loRS = gchain.executeQuery(query);
