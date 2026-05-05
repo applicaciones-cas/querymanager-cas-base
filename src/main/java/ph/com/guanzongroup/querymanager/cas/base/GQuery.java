@@ -177,7 +177,8 @@ public class GQuery {
         String query = "SELECT a.sBranchCD, a.sBranchNm"
                 + " FROM Branch a"
                 + " WHERE a.cRecdStat = '1'";
-        //query = MiscUtil.addCondition(query, code ? "a.sBranchCD = " + SQLUtil.toSQL(branch) : "a.sBranchNm LIKE " + SQLUtil.toSQL(branch + "%"));
+        
+        query = MiscUtil.addCondition(query, code ? "a.sBranchCD = " + SQLUtil.toSQL(branch) : "a.sBranchNm LIKE " + SQLUtil.toSQL(branch + "%"));
 
         ResultSet loRS = poGRider.executeQuery(query);
 

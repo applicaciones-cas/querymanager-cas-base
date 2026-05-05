@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryFXConnection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">querymanager-cas-base</a> &gt; <a href="index.source.html" class="el_package">ph.com.guanzongroup.querymanager.cas.base</a> &gt; <span class="el_source">QueryFXConnection.java</span></div><h1>QueryFXConnection.java</h1><pre class="source lang-java linenums">/*
+ * =========================================
+ * Requirements:
+ *    Spoken Requirements:
+ *        1) Local Machine Date &amp; Time is in sync with Server Machine
+ * Sample Usage: Initialization
+ *
+ * GConnection loGCon = new GConnection();
+ * loGCon.setBranch(&quot;01&quot;);
+ * loGCon.setUser(&quot;0109035&quot;);
+ * loGCon.setupDataSource(&quot;localhost&quot;, &quot;GMC_ISysDBF&quot;, &quot;sa&quot;, &quot;Wtrtwh&quot;, &quot;3306&quot;);
+ *      :
+ *      :
+ * TimeStamp loTime = loGCon.getServerDate();
+ *      :
+ *      :
+ * loGCon.beginTrans();
+ * int lnRecdCtrx = loGCon.executeQuery(...);
+ * if(lnRecdCtrxx &gt; 0)
+ *     loGCon.commitTrans();
+ * else
+ *     loGCon.rollbackTrans();
+ * =========================================
+ */
+package ph.com.guanzongroup.querymanager.cas.base;
+
+import java.security.SecureRandom;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.lang3.StringUtils;
+import org.guanzon.appdriver.base.GuanzonException;
+import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.json.simple.JSONObject;
+
+/**
+ *
+ * @author kalyptus
+ */
+<span class="nc" id="L48">public class QueryFXConnection {</span>
+
+    public void setupDataSource(String fsURL, String fsDBF, String fsUser, String fsPassWD, String fsPort) {
+<span class="nc" id="L51">        BasicDataSource ds = new BasicDataSource();</span>
+<span class="nc" id="L52">        ds.setDriverClassName(&quot;com.mysql.cj.jdbc.Driver&quot;);</span>
+<span class="nc" id="L53">        ds.setUsername(fsUser);</span>
+<span class="nc" id="L54">        ds.setPassword(fsPassWD);</span>
+<span class="nc" id="L55">        ds.setUrl(&quot;jdbc:mysql://&quot; + fsURL + &quot;:&quot; + fsPort + &quot;/&quot; + fsDBF);</span>
+<span class="nc" id="L56">        poDS = ds;</span>
+<span class="nc" id="L57">    }</span>
+
+    /*
+    * Connect to the database using the values in the Data Source
+     */
+    public Connection doConnect() throws SQLException {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (poDS == null) {</span>
+<span class="nc" id="L64">            return null;</span>
+        }
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (poCon != null) {</span>
+<span class="nc" id="L68">            poCon.close();</span>
+        }
+
+<span class="nc" id="L71">        poCon = poDS.getConnection();</span>
+
+<span class="nc" id="L73">        psBatchNox = &quot;&quot;;</span>
+
+<span class="nc" id="L75">        return poCon;</span>
+    }
+
+    public Connection getConnection() {
+<span class="nc" id="L79">        return poCon;</span>
+    }
+
+    public void beginTrans(String fsEventDsc, String fsRemarksx, String fsSourceCD, String fsSourceNo) throws SQLException, GuanzonException {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (!poCon.getAutoCommit()) {</span>
+<span class="nc" id="L84">            throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);</span>
+        }
+
+<span class="nc" id="L87">        poCon.setAutoCommit(false);</span>
+
+<span class="nc" id="L89">        psBatchNox = generateBatchNo(psBranchCD, psTermNoxx);</span>
+
+<span class="nc" id="L91">        StringBuilder lsNme = new StringBuilder();</span>
+
+        //set fieldnames
+<span class="nc" id="L94">        lsNme.append(&quot;(sTransNox&quot;);</span>
+<span class="nc" id="L95">        lsNme.append(&quot;, sComptrNm&quot;);</span>
+<span class="nc" id="L96">        lsNme.append(&quot;, sSourceCD&quot;);</span>
+<span class="nc" id="L97">        lsNme.append(&quot;, sSourceNo&quot;);</span>
+<span class="nc" id="L98">        lsNme.append(&quot;, sEventNme&quot;);</span>
+<span class="nc" id="L99">        lsNme.append(&quot;, sRemarksx&quot;);</span>
+<span class="nc" id="L100">        lsNme.append(&quot;, sModified&quot;);</span>
+<span class="nc" id="L101">        lsNme.append(&quot;, dModified)&quot;);</span>
+
+<span class="nc" id="L103">        Timestamp tme = getServerDate();</span>
+
+<span class="nc" id="L105">        StringBuilder lsSQL = new StringBuilder();</span>
+<span class="nc" id="L106">        lsSQL.append(&quot;(&quot;).append(SQLUtil.toSQL(psBatchNox));</span>
+<span class="nc" id="L107">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(MiscUtil.getPCName()));</span>
+<span class="nc" id="L108">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(fsSourceCD));</span>
+<span class="nc" id="L109">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(fsSourceNo));</span>
+<span class="nc" id="L110">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(fsEventDsc));</span>
+<span class="nc" id="L111">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(fsRemarksx));</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL((psUserIDxx == null ? &quot;&quot; : psUserIDxx)));</span>
+<span class="nc" id="L113">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(tme)).append(&quot;)&quot;);</span>
+
+        //System.out.println(lsSQL.toString());
+<span class="nc" id="L116">        executeUpdate(&quot;INSERT INTO xxxAuditLogMaster&quot; + lsNme.toString() + &quot; VALUES&quot; + lsSQL.toString());</span>
+<span class="nc" id="L117">    }</span>
+
+    public static String extractTableName(String sql) {
+<span class="nc bnc" id="L120" title="All 4 branches missed.">        if (sql == null || sql.trim().isEmpty()) {</span>
+<span class="nc" id="L121">            return null;</span>
+        }
+
+        // Normalize SQL (uppercase, collapse spaces)
+<span class="nc" id="L125">        String normalizedSQL = sql.trim().toUpperCase().replaceAll(&quot;\\s{2,}&quot;, &quot; &quot;);</span>
+
+        // Regex patterns for each statement type
+<span class="nc" id="L128">        String[] patterns = {</span>
+            &quot;^INSERT\\s+INTO\\s+(\\w+)&quot;, // INSERT INTO table
+            &quot;^UPDATE\\s+(\\w+)&quot;, // UPDATE table
+            &quot;^DELETE\\s+FROM\\s+(\\w+)&quot;, // DELETE FROM table
+            &quot;^REPLACE\\s+INTO\\s+(\\w+)&quot; // REPLACE INTO table
+        };
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (String regex : patterns) {</span>
+<span class="nc" id="L136">            Matcher matcher = Pattern.compile(regex).matcher(normalizedSQL);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            if (matcher.find()) {</span>
+<span class="nc" id="L138">                return matcher.group(1); // return the captured table name</span>
+            }
+        }
+
+<span class="nc" id="L142">        return null; // no match found</span>
+    }
+
+    public ResultSet executeQuery(String sql) throws SQLException {
+<span class="nc" id="L146">        Statement loSQL = poCon.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);</span>
+<span class="nc" id="L147">        ResultSet oRS = loSQL.executeQuery(sql);</span>
+<span class="nc" id="L148">        return oRS;</span>
+    }
+
+    public long executeUpdate(String sql) throws SQLException, GuanzonException {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if (!poCon.getAutoCommit()) {</span>
+<span class="nc" id="L153">            throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);</span>
+        }
+
+        long lnRecord;
+<span class="nc" id="L157">        Statement loSQL = poCon.createStatement();</span>
+<span class="nc" id="L158">        sql = sql.replace(&quot; 00:00:00&quot;, &quot;&quot;);</span>
+        //System.out.println(&quot;:&quot; + sql + &quot;:&quot; );
+<span class="nc" id="L160">        lnRecord = loSQL.executeUpdate(sql);</span>
+<span class="nc" id="L161">        MiscUtil.close(loSQL);</span>
+<span class="nc" id="L162">        return lnRecord;</span>
+    }
+
+    public void logQuery(String sql, String branch, String destinat, String division) throws SQLException, GuanzonException {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (!poCon.getAutoCommit()) {</span>
+<span class="nc" id="L167">            throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);</span>
+        }
+
+        //extract the table here...
+<span class="nc" id="L171">        String table = extractTableName(sql);</span>
+
+<span class="nc" id="L173">        StringBuilder lsNme = new StringBuilder();</span>
+<span class="nc" id="L174">        String lsTransNox = getNextCode(&quot;xxxAuditLogDetail&quot;, &quot;sTransNox&quot;, psBranchCD, psTermNoxx);</span>
+        //set fieldnames
+<span class="nc" id="L176">        lsNme.append(&quot;(sTransNox&quot;);</span>
+<span class="nc" id="L177">        lsNme.append(&quot;, sBranchCd&quot;);</span>
+<span class="nc" id="L178">        lsNme.append(&quot;, sSourceNo&quot;);</span>
+<span class="nc" id="L179">        lsNme.append(&quot;, sQryTypex&quot;);</span>
+<span class="nc" id="L180">        lsNme.append(&quot;, cIsJsonxx&quot;);</span>
+<span class="nc" id="L181">        lsNme.append(&quot;, sPayloadx&quot;);</span>
+<span class="nc" id="L182">        lsNme.append(&quot;, sFilterxx&quot;);</span>
+<span class="nc" id="L183">        lsNme.append(&quot;, sTableNme&quot;);</span>
+<span class="nc" id="L184">        lsNme.append(&quot;, sDestinat&quot;);</span>
+<span class="nc" id="L185">        lsNme.append(&quot;, sDivision&quot;);</span>
+<span class="nc" id="L186">        lsNme.append(&quot;, sModified&quot;);</span>
+<span class="nc" id="L187">        lsNme.append(&quot;, dModified)&quot;);</span>
+
+        //set values
+<span class="nc" id="L190">        StringBuilder lsSQL = new StringBuilder();</span>
+        //sTransNox
+<span class="nc" id="L192">        lsSQL.append(&quot;(&quot;).append(SQLUtil.toSQL(lsTransNox));</span>
+        //sBranchCd
+<span class="nc" id="L194">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(branch));</span>
+        //sSourceNo
+<span class="nc" id="L196">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(psBatchNox));</span>
+
+<span class="nc" id="L198">        String query_type = sql.substring(0, sql.indexOf(&quot; &quot;));</span>
+        //sQryTypex
+<span class="nc" id="L200">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(query_type));</span>
+        //cIsJsonxx
+<span class="nc" id="L202">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(&quot;0&quot;));</span>
+
+<span class="nc" id="L204">        JSONObject json = new JSONObject();</span>
+<span class="nc" id="L205">        json.put(&quot;data&quot;, sql);</span>
+        //sPayloadx
+<span class="nc" id="L207">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(json.toJSONString()));</span>
+        //sFilterxx
+<span class="nc" id="L209">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(&quot;&quot;));</span>
+        //sTableNme
+<span class="nc" id="L211">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(table));</span>
+        //sDestinat
+<span class="nc" id="L213">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(destinat));</span>
+        //sDivision
+<span class="nc" id="L215">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(division));</span>
+        //sModified
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL((psUserIDxx == null ? &quot;&quot; : psUserIDxx)));</span>
+
+<span class="nc" id="L219">        Timestamp tme = getServerDate();</span>
+        //dModified
+<span class="nc" id="L221">        lsSQL.append(&quot;, &quot;).append(SQLUtil.toSQL(tme)).append(&quot;)&quot;);</span>
+
+<span class="nc" id="L223">        executeUpdate(&quot;INSERT INTO xxxAuditLogDetail&quot; + lsNme.toString() + &quot; VALUES&quot; + lsSQL.toString());</span>
+
+<span class="nc" id="L225">    }</span>
+
+    public void commitTrans() throws SQLException, GuanzonException {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if (poCon.getAutoCommit()) {</span>
+<span class="nc" id="L229">            throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);</span>
+        }
+
+<span class="nc" id="L232">        poCon.commit();</span>
+<span class="nc" id="L233">        poCon.setAutoCommit(true);</span>
+<span class="nc" id="L234">        psBatchNox = &quot;&quot;;</span>
+<span class="nc" id="L235">    }</span>
+
+    public void rollbackTrans() throws SQLException, GuanzonException {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (poCon.getAutoCommit()) {</span>
+<span class="nc" id="L239">            throw new GuanzonException(GuanzonException.GE_SEQUENCE_EXCEPTION);</span>
+        }
+
+<span class="nc" id="L242">        poCon.rollback();</span>
+<span class="nc" id="L243">        poCon.setAutoCommit(false);</span>
+<span class="nc" id="L244">        psBatchNox = &quot;&quot;;</span>
+<span class="nc" id="L245">    }</span>
+
+    /*
+    * get the timestamp from the mysql server
+     */
+    public Timestamp getServerDate() throws SQLException {
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (poDS == null) {</span>
+<span class="nc" id="L252">            return null;</span>
+        }
+
+        Connection loCon;
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        if (poCon == null) {</span>
+<span class="nc" id="L257">            loCon = doConnect();</span>
+        } else {
+<span class="nc" id="L259">            loCon = poCon;</span>
+        }
+
+        //System.out.println(loCon.getMetaData().getDriverName());
+        String lsSQL;
+
+        //System.out.println(loCon.getMetaData().getDriverName());
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (loCon.getMetaData().getDriverName().equalsIgnoreCase(&quot;SQLiteJDBC&quot;)) {</span>
+<span class="nc" id="L267">            lsSQL = &quot;SELECT DATETIME('now','localtime')&quot;;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        } else if (loCon.getMetaData().getDriverName().equalsIgnoreCase(&quot;H2 JDBC Driver&quot;)) {</span>
+<span class="nc" id="L269">            lsSQL = &quot;SELECT CURRENT_TIMESTAMP&quot;;</span>
+        } else {
+            //assume that default database is MySQL ODBC
+<span class="nc" id="L272">            lsSQL = &quot;SELECT SYSDATE()&quot;;</span>
+        }
+
+<span class="nc" id="L275">        ResultSet loRS = loCon.createStatement()</span>
+<span class="nc" id="L276">                .executeQuery(lsSQL);</span>
+
+        //position record pointer to the first record
+<span class="nc" id="L279">        loRS.next();</span>
+
+        Timestamp loTimeStamp;
+
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (loCon.getMetaData().getDriverName().equalsIgnoreCase(&quot;H2 JDBC Driver&quot;)) {</span>
+<span class="nc" id="L284">            loTimeStamp = loRS.getTimestamp(1);</span>
+        } else {
+<span class="nc" id="L286">            loTimeStamp = Timestamp.valueOf(loRS.getString(1));</span>
+        }
+
+        //assigned timestamp
+        //loTimeStamp = loRS.getTimestamp(1);
+        //loTimeStamp = loRS.getTimestamp(1); 
+<span class="nc" id="L292">        MiscUtil.close(loRS);</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        if (poCon == null) {</span>
+<span class="nc" id="L294">            MiscUtil.close(loCon);</span>
+        }
+
+<span class="nc" id="L297">        return loTimeStamp;</span>
+    }
+
+    /*
+    Returns: 25 digit string with format BBBBTTYYMMDDHHMMSSXXXNNNN
+    Where  :
+        04 -&gt; BBBB -&gt; Branch Code
+        02 -&gt; TT   -&gt; Terminal ID (should be numeric from 01-99)
+        02 -&gt; YY   -&gt; 2 Digit Year
+        02 -&gt; MM   -&gt; 2 Digit Month
+        02 -&gt; DD   -&gt; 2 Digit Day of Month
+        02 -&gt; HH   -&gt; 2 Digit hour (Make sure OS system date is in 24 hour format
+        02 -&gt; MM   -&gt; 2 Digit minute 
+        02 -&gt; SS   -&gt; 2 Digit seconds 
+        03 -&gt; XXXX -&gt; 4 digit milliseconds
+        04 -&gt; NNNN -&gt; 4 digit unique random number
+     */
+    private String generateBatchNo(String branchCode, String terminalId) {
+
+        // Timestamp formatted as yyMMddHHmmssSSS (2-digit year, total 15 digits for timestamp)
+<span class="nc" id="L317">        String timestamp = new SimpleDateFormat(&quot;yyMMddHHmmssSSS&quot;).format(new Date());</span>
+
+        // Append a 4-character random hexa suffix for extra uniqueness.
+<span class="nc" id="L320">        String randomSuffix = String.format(&quot;%04X&quot;, random.nextInt(0x10000));</span>
+
+        // Concatenate branch code, terminal id, timestamp, and random suffix.
+<span class="nc" id="L323">        return branchCode + terminalId + timestamp + randomSuffix;</span>
+    }
+
+    /*
+    Returns: 20 digit string with format BBBBTTYYYYMMNNNNNNNN
+
+    Where  :
+        04 -&gt; BBBB -&gt; Branch Code
+        02 -&gt; TT   -&gt; Terminal ID (should be numeric from 01-99)
+        04 -&gt; YY   -&gt; 4 Digit Year
+        02 -&gt; MM   -&gt; 2 Digit Month
+        08 -&gt; NNNN -&gt; 8 digit series
+     */
+    private String getNextCode(
+            String fsTableNme,
+            String fsFieldNme,
+            String fsBranchCd,
+            String fsTermIDxx) throws SQLException {
+
+        int lnNext;
+        String lsSQL;
+        ResultSet loRS;
+
+        // Timestamp formatted as yyMMddHHmmssSSS (6-digit year/month )
+<span class="nc" id="L347">        String timestamp = new SimpleDateFormat(&quot;yyyyMM&quot;).format(new Date());</span>
+
+        //BBBBTTYYYYMM
+<span class="nc" id="L350">        String lsPref = fsBranchCd + fsTermIDxx + timestamp;</span>
+
+<span class="nc" id="L352">        lsSQL = &quot;SELECT &quot; + fsFieldNme</span>
+                + &quot; FROM &quot; + fsTableNme
+<span class="nc" id="L354">                + &quot; WHERE &quot; + fsFieldNme + &quot; LIKE &quot; + SQLUtil.toSQL(lsPref + &quot;%&quot;)</span>
+                + &quot; ORDER BY &quot; + fsFieldNme + &quot; DESC &quot;
+                + &quot; LIMIT 1&quot;;
+
+<span class="nc" id="L358">        loRS = executeQuery(lsSQL);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        if (loRS.next()) {</span>
+<span class="nc" id="L360">            lnNext = Integer.parseInt(loRS.getString(1).substring(lsPref.length()));</span>
+        } else {
+<span class="nc" id="L362">            lnNext = 0;</span>
+        }
+
+<span class="nc" id="L365">        String lsNextCde = lsPref + StringUtils.leftPad(String.valueOf(lnNext + 1), loRS.getMetaData().getPrecision(1) - lsPref.length(), &quot;0&quot;);</span>
+
+<span class="nc" id="L367">        MiscUtil.close(loRS);</span>
+
+<span class="nc" id="L369">        return lsNextCde;</span>
+    }
+
+    public void setBranch(String branch) {
+<span class="nc" id="L373">        psBranchCD = branch;</span>
+<span class="nc" id="L374">    }</span>
+
+    public void setTerminalNo(String terminalno) {
+<span class="nc" id="L377">        psTermNoxx = terminalno;</span>
+<span class="nc" id="L378">    }</span>
+
+    public void setUser(String user) {
+<span class="nc" id="L381">        psUserIDxx = user;</span>
+<span class="nc" id="L382">    }</span>
+
+    public String getBatchNumber() {
+<span class="nc" id="L385">        return psBatchNox;</span>
+    }
+
+<span class="nc" id="L388">    private static final SecureRandom random = new SecureRandom();</span>
+    private BasicDataSource poDS;
+    private Connection poCon;
+    private String psUserIDxx;
+    private String psBranchCD;
+    private String psTermNoxx;
+
+    private String psBatchNox;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,5 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+querymanager-cas-base,ph.com.guanzongroup.querymanager.cas.base,QueryFXConnection,781,0,40,0,150,0,39,0,19,0
+querymanager-cas-base,ph.com.guanzongroup.querymanager.cas.base,GQuery,1867,0,252,0,401,0,151,0,24,0
+querymanager-cas-base,ph.com.guanzongroup.querymanager.cas.base,GQuery2,1833,0,258,0,407,0,155,0,25,0
+querymanager-cas-base,ph.com.guanzongroup.querymanager.cas.base,BatchQuery,768,0,76,0,178,0,59,0,21,0
