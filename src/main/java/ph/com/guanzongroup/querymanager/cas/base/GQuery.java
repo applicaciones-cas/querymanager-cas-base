@@ -412,6 +412,13 @@ public class GQuery {
 //                return false;
 //            }
 
+            if (!gchain.logQuery(query, "xxxTableAll", branchcd, destntcd, "")) {
+                message = gchain.getMessage();
+                gchain.rollbackTrans();
+                count = 0;
+                return false;
+            }
+
             //Log statement to the xxxAuditTrail
             if (!gchain.logAudit("QRYX", gchain.getLastReplNo(), "", "View Audit Log", "", MiscUtil.getPCName(), poGRider.Encrypt(poGRider.getUserID(), "sysmgr"))) {
                 message = gchain.getMessage();
